@@ -9,7 +9,7 @@ const { prefix, token } = require('./config.json');
 // create a new Discord client
 const client = new Discord.Client();
 
-// allows use of commands in a separate folder
+// allows encapsulation of commands
 client.commands = new Discord.Collection();
 
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -21,6 +21,9 @@ for (const file of commandFiles) {
     // with the key as the command name and the value as the exported module
     client.commands.set(command.name, command);
 }
+
+// enables cooldown/mandatory wait feature on commands
+const cooldowns = new Discord.Collection();
 
 // when the client is ready, run this code
 // this event will trigger whenever your bot:
@@ -50,6 +53,50 @@ client.on('message', message => {
 	if (!client.commands.has(commandName)) return;
 
 	const command = client.commands.get(commandName);
+
+	/* when you try to use a guildOnly command inside a DM, 
+	you'll get the appropriate response which will also 
+	prevent your bot from throwing an error */
+	if (command.guildOnly && message.channel.type !== 'text') {
+    return message.reply('I can\'t execute that command inside DMs!');
+}
+
+	// Whenever you set args to true in one of your command files, 
+	// it'll perform this check and supply feedback if necessary
+    if (command.args && !args.length) {
+        let reply = `You didn't provide any arguments, ${message.author}!`;
+
+        if (command.usage) {
+            reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
+        }
+
+        return message.channel.send(reply);
+	}
+
+	// cooldown follow-up
+	if (!cooldowns.has(command.name)) {
+	    cooldowns.set(command.name, new Discord.Collection());
+	}
+
+	const now = Date.now();
+	const timestamps = cooldowns.get(command.name);
+	const cooldownAmount = (command.cooldown || 3) * 1000;
+
+	if (!timestamps.has(message.author.id)) {
+		timestamps.set(message.author.id, now);
+		setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+	}
+	else {
+		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+
+		if (now < expirationTime) {
+			const timeLeft = (expirationTime - now) / 1000;
+			return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+		}
+
+		timestamps.set(message.author.id, now);
+		setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+	}
 
 	try {
 	    command.execute(message, args);
