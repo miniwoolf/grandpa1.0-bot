@@ -56,9 +56,13 @@ client.on('message', message => {
 	const command = client.commands.get(commandName)
         || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
-    if (responseObject.some(word => message.content.includes(word)) ) {
+    var regex = /(oof|yikes)\b/
+	var found = message.content.match(regex);
+	if (found[0] != "") {
 	    message.react('487488039132856320');
 	}
+
+	console.log(found);
 
 	// If the message isn't a real command, exit early.
 	if (!command) return;
