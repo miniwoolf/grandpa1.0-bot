@@ -56,11 +56,9 @@ client.on('message', message => {
 	const command = client.commands.get(commandName)
         || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
-    /*
     if (responseObject.some(word => message.content.includes(word)) ) {
-	    message.channel.send('add a quarter to the oof jar');
+	    message.react('487488039132856320');
 	}
-	*/
 
 	// If the message isn't a real command, exit early.
 	if (!command) return;
