@@ -4,7 +4,7 @@ const fs = require('fs');
 const Discord = require('discord.js');
 
 // stores key/value pairs outside of bot code
-const { prefix, token } = require('./config.json');
+const { prefix, token, responseObject } = require('./config.json');
 
 // create a new Discord client
 const client = new Discord.Client();
@@ -33,32 +33,43 @@ client.on('ready', () => {
     console.log('Ready!');
 });
 
-// reads messages
+// reads messages and runs addtional code when certain conditions are met
 client.on('message', message => {
+
+	// console.log("[#" + message.channel.name + "] " + message.author.username + "/" + message.member.nickname + ": " + message.content);
 
 	// If the message either doesn't start with the prefix or 
 	// was sent by a bot, exit early.
-	if (!message.content.startsWith(prefix) || message.author.bot) return;
+	if (/*!message.content.startsWith(prefix) || */ message.author.bot) return;
 
-	// Create an args variable that slices off 
-	// the prefix entirely and then splits it into an array by spaces
+	// Creates an args variable that removes the prefix 
+	// and then splits the message into an array by spaces
 	const args = message.content.slice(prefix.length).split(/ +/);
 
-	/* Create a command variable by calling args.shift(), 
-	which will take the first element in array and return it 
+	/* Creates a command variable by calling args.shift(), 
+	which will take the first element in the array and return it, 
 	while also removing it from the original array (so that 
 	you don't have the command name string inside the args array) */
 	const commandName = args.shift().toLowerCase();
 
-	if (!client.commands.has(commandName)) return;
+	// allows use of command aliases
+	const command = client.commands.get(commandName)
+        || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
-	const command = client.commands.get(commandName);
+    /*
+    if (responseObject.some(word => message.content.includes(word)) ) {
+	    message.channel.send('add a quarter to the oof jar');
+	}
+	*/
+
+	// If the message isn't a real command, exit early.
+	if (!command) return;
 
 	/* when you try to use a guildOnly command inside a DM, 
 	you'll get the appropriate response which will also 
 	prevent your bot from throwing an error */
 	if (command.guildOnly && message.channel.type !== 'text') {
-    return message.reply('I can\'t execute that command inside DMs!');
+    return message.reply('I can\'t execute that command inside DMs, my man');
 }
 
 	// Whenever you set args to true in one of your command files, 
@@ -78,10 +89,18 @@ client.on('message', message => {
 	    cooldowns.set(command.name, new Discord.Collection());
 	}
 
+	// creates variable with current timestamp
 	const now = Date.now();
+	// creates variable that .get()s the Collection for the triggered command
 	const timestamps = cooldowns.get(command.name);
+	/* creates variable that gets the cooldown time 
+	(which here defaults to 3sec if left blank) then 
+	converts it to the proper amount of milliseconds */
 	const cooldownAmount = (command.cooldown || 3) * 1000;
 
+	/* If the timestamps Collection doesn't have the message author's ID, 
+	set it in with the current timestamp and create a setTimeout() to 
+	automatically delete it later, depending on that command's cooldown number. */
 	if (!timestamps.has(message.author.id)) {
 		timestamps.set(message.author.id, now);
 		setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
@@ -106,8 +125,6 @@ client.on('message', message => {
 	    message.reply('there was an error trying to execute that command!');
 	}
 
-    //console.log("[#" + message.channel.name + "] " + message.author.username + "/" + message.member.nickname + ": " + message.content);
-    //console.log(message.content);
 });
 
 // login to Discord with your app's token
