@@ -1,4 +1,5 @@
 {
     "prefix": "!",
-    "token": "ypur-token-here"
+    "token": "your-token-here"
+    "responseObject": ["oof"]
 }
