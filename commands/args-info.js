@@ -1,6 +1,7 @@
 module.exports = {
     name: 'args-info',
     description: 'Information about the arguments provided.',
+    aliases: ['arg-info', 'args', 'arguments'],
     execute(message, args) {
         if (args[0] === 'foo') {
             return message.channel.send('bar');
