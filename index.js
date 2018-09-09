@@ -38,9 +38,8 @@ client.on('message', message => {
 
 	// console.log("[#" + message.channel.name + "] " + message.author.username + "/" + message.member.nickname + ": " + message.content);
 
-	// If the message either doesn't start with the prefix or 
-	// was sent by a bot, exit early.
-	if (/*!message.content.startsWith(prefix) || */ message.author.bot) return;
+	// If the message was sent by a bot, exit early.
+	if (message.author.bot) return;
 
 	// Creates an args variable that removes the prefix 
 	// and then splits the message into an array by spaces
@@ -56,13 +55,14 @@ client.on('message', message => {
 	const command = client.commands.get(commandName)
         || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
-    var regex = /(oof|yikes)\b/
+    var regex = /\b(oof|yikes)\b/
 	var found = message.content.match(regex);
-	if (found[0] != "") {
-	    message.react('487488039132856320');
-	}
 
 	console.log(found);
+
+	if (found != null) {
+	    message.react('487488039132856320');
+	}
 
 	// If the message isn't a real command, exit early.
 	if (!command) return;
