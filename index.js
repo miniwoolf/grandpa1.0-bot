@@ -4,7 +4,7 @@ const fs = require('fs');
 const Discord = require('discord.js');
 
 // stores key/value pairs outside of bot code
-const { prefix, token, responseObject } = require('./config.json');
+const { prefix, token, regex } = require('./config.json');
 
 // create a new Discord client
 const client = new Discord.Client();
@@ -36,7 +36,7 @@ client.on('ready', () => {
 // reads messages and runs addtional code when certain conditions are met
 client.on('message', message => {
 
-	// console.log("[#" + message.channel.name + "] " + message.author.username + "/" + message.member.nickname + ": " + message.content);
+	console.log(`Logged in as ${client.user.tag}!`);
 
 	// If the message was sent by a bot, exit early.
 	if (message.author.bot) return;
@@ -55,15 +55,6 @@ client.on('message', message => {
 	const command = client.commands.get(commandName)
         || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
-    var regex = /\b(oof|yikes)\b/
-	var found = message.content.match(regex);
-
-	console.log(found);
-
-	if (found != null) {
-	    message.react('487488039132856320');
-	}
-
 	// If the message isn't a real command, exit early.
 	if (!command) return;
 
@@ -71,8 +62,8 @@ client.on('message', message => {
 	you'll get the appropriate response which will also 
 	prevent your bot from throwing an error */
 	if (command.guildOnly && message.channel.type !== 'text') {
-    return message.reply('I can\'t execute that command inside DMs, my man');
-}
+	    return message.reply('I can\'t execute that command inside DMs, my man');
+	}
 
 	// Whenever you set args to true in one of your command files, 
 	// it'll perform this check and supply feedback if necessary
